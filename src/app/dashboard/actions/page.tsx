@@ -1,5 +1,7 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import GenerateActionsButton from "./GenerateActionsButton";
+import MarkDoneButton from "./MarkDoneButton";
+import MeasureOutcomesButton from "./MeasureOutcomesButton";
 
 const ACTION_LABELS: Record<string, { label: string; color: string; icon: string }> = {
   send_churn_whatsapp: { label: "Send Churn Recovery Message", color: "bg-red-900/50 text-red-300", icon: "📱" },
@@ -33,7 +35,10 @@ export default async function ActionsPage() {
             Ranked by expected ₹ impact — generated from CLV segments and churn signals
           </p>
         </div>
-        <GenerateActionsButton />
+        <div className="flex items-center gap-2">
+          <MeasureOutcomesButton />
+          <GenerateActionsButton />
+        </div>
       </div>
 
       <div className="mt-4 mb-6 rounded-lg border border-emerald-800 bg-emerald-950/30 px-5 py-4">
@@ -70,11 +75,18 @@ export default async function ActionsPage() {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-emerald-400 font-semibold">
-                    +₹{Number(a.expected_value ?? 0).toFixed(0)}
-                  </p>
-                  <p className="text-[10px] text-neutral-600">expected impact</p>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-emerald-400 font-semibold">
+                      +₹{Number(a.expected_value ?? 0).toFixed(0)}
+                    </p>
+                    <p className="text-[10px] text-neutral-600">expected impact</p>
+                  </div>
+                  <MarkDoneButton
+                    actionId={a.id}
+                    wasExecuted={a.was_executed}
+                    actualOutcomeValue={a.actual_outcome_value}
+                  />
                 </div>
               </div>
             );

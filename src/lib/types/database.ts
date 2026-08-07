@@ -333,6 +333,7 @@ export type Database = {
           reasoning: Record<string, unknown> | null;
           expected_value: number | null;
           was_executed: boolean;
+          executed_at: string | null;
           actual_outcome_value: number | null;
           created_at: string;
         };
@@ -344,6 +345,7 @@ export type Database = {
           reasoning?: Record<string, unknown> | null;
           expected_value?: number | null;
           was_executed?: boolean;
+          executed_at?: string | null;
           actual_outcome_value?: number | null;
           created_at?: string;
         };

@@ -1,5 +1,6 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import RecomputeClvButton from "./RecomputeClvButton";
+import EditCustomerButton from "./EditCustomerButton";
 
 const SEGMENT_STYLES: Record<string, { label: string; color: string }> = {
   whale: { label: "🐋 Whale", color: "bg-purple-900/50 text-purple-300" },
@@ -15,7 +16,7 @@ export default async function ClvPage() {
 
   const { data: customers, error } = await supabase
     .from("customers")
-    .select("id, name, phone, clv_tier, clv_score, churn_risk_score")
+    .select("id, cafe_id, name, phone, clv_tier, clv_score, churn_risk_score")
     .order("clv_score", { ascending: false, nullsFirst: false });
 
   const segmentCounts: Record<string, number> = {};
@@ -61,6 +62,7 @@ export default async function ClvPage() {
               <th className="text-left px-4 py-2">Segment</th>
               <th className="text-left px-4 py-2">Predicted LTV</th>
               <th className="text-left px-4 py-2">Churn Risk</th>
+              <th className="text-left px-4 py-2">Edit</th>
             </tr>
           </thead>
           <tbody>
@@ -81,12 +83,15 @@ export default async function ClvPage() {
                     <td className="px-4 py-2 text-neutral-400">
                       {c.churn_risk_score != null ? `${(c.churn_risk_score * 100).toFixed(0)}%` : "—"}
                     </td>
+                    <td className="px-4 py-2">
+                      <EditCustomerButton customerId={c.id} cafeId={c.cafe_id} />
+                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-neutral-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-neutral-500">
                   No customers yet.
                 </td>
               </tr>

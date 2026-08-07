@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import RunChurnButton from "./RunChurnButton";
+import FomoCampaignForm from "./FomoCampaignForm";
 
 export default async function RetentionPage() {
   const supabase = await createClient();
@@ -10,9 +11,6 @@ export default async function RetentionPage() {
     .order("sent_at", { ascending: false })
     .limit(50);
 
-  // Fetch customer names/phones separately (simple approach for v1;
-  // a joined query works too once you're comfortable with Supabase's
-  // nested select syntax)
   let customerMap: Record<string, { name: string | null; phone: string }> = {};
   if (messages && messages.length > 0) {
     const customerIds = [...new Set(messages.map((m) => m.customer_id).filter(Boolean))];
@@ -28,6 +26,8 @@ export default async function RetentionPage() {
     }
   }
 
+  const { data: cafe } = await supabase.from("cafes").select("id").limit(1).maybeSingle();
+
   const isDryRun = process.env.WHATSAPP_MODE !== "live";
 
   return (
@@ -36,7 +36,7 @@ export default async function RetentionPage() {
         <div>
           <h1 className="text-2xl font-bold">Retention Engine</h1>
           <p className="text-neutral-400 text-sm">
-            WhatsApp churn recovery, milestones, referrals — message log
+            WhatsApp churn recovery, milestones, referrals, FOMO offers — message log
           </p>
         </div>
         <RunChurnButton />
@@ -48,6 +48,8 @@ export default async function RetentionPage() {
           Set WHATSAPP_MODE=live in .env.local once your WhatsApp credentials are ready.
         </div>
       )}
+
+      {cafe && <FomoCampaignForm cafeId={cafe.id} />}
 
       {error && (
         <div className="rounded-md border border-red-800 bg-red-950/40 px-4 py-3 text-red-300">

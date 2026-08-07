@@ -1,8 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import CreateSquadForm from "./CreateSquadForm";
+import SquadMembers from "./SquadMembers";
+import { rolloverExpiredSquadCycles } from "@/lib/squads/rollover";
 
 export default async function SquadsPage() {
   const supabase = await createClient();
+
+  const { data: cafeForRollover } = await supabase.from("cafes").select("id").limit(1).maybeSingle();
+  if (cafeForRollover) {
+    await rolloverExpiredSquadCycles(cafeForRollover.id);
+  }
 
   const { data: squads, error } = await supabase
     .from("squads")
@@ -10,6 +17,15 @@ export default async function SquadsPage() {
     .order("created_at", { ascending: false });
 
   const { data: cafe } = await supabase.from("cafes").select("id").limit(1).maybeSingle();
+
+  const squadIds = (squads ?? []).map((s: any) => s.id);
+  const { data: allMembers } =
+    squadIds.length > 0
+      ? await supabase
+          .from("customers")
+          .select("id, name, phone, squad_id")
+          .in("squad_id", squadIds)
+      : { data: [] };
 
   return (
     <div className="min-h-screen bg-neutral-900 text-neutral-100 p-8">
@@ -37,6 +53,8 @@ export default async function SquadsPage() {
               s.shared_hours_pool > 0
                 ? Math.min(100, (s.hours_used_this_cycle / s.shared_hours_pool) * 100)
                 : 0;
+            const members = (allMembers ?? []).filter((m: any) => m.squad_id === s.id);
+
             return (
               <div
                 key={s.id}
@@ -69,6 +87,10 @@ export default async function SquadsPage() {
                   <p className="text-xs text-neutral-500 mt-3">
                     ₹{s.monthly_fee}/month · {s.streak_weeks} week streak
                   </p>
+                )}
+
+                {cafe && (
+                  <SquadMembers squadId={s.id} cafeId={cafe.id} members={members} />
                 )}
               </div>
             );
