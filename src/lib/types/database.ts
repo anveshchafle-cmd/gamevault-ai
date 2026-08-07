@@ -91,6 +91,7 @@ export type Database = {
           cafe_id: string;
           station_id: string;
           customer_id: string | null;
+          squad_id: string | null;
           game_played: string | null;
           started_at: string;
           ended_at: string | null;
@@ -105,6 +106,7 @@ export type Database = {
           cafe_id: string;
           station_id: string;
           customer_id?: string | null;
+          squad_id?: string | null;
           game_played?: string | null;
           started_at?: string;
           ended_at?: string | null;
@@ -244,6 +246,82 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["cafe_staff"]["Insert"]>;
+        Relationships: [];
+      };
+      pricing_rules: {
+        Row: {
+          id: string;
+          cafe_id: string;
+          rule_name: string;
+          station_tier: string | null;
+          day_of_week: number[] | null;
+          start_time: string | null;
+          end_time: string | null;
+          price_multiplier: number;
+          min_occupancy_pct: number | null;
+          max_occupancy_pct: number | null;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          cafe_id: string;
+          rule_name: string;
+          station_tier?: string | null;
+          day_of_week?: number[] | null;
+          start_time?: string | null;
+          end_time?: string | null;
+          price_multiplier?: number;
+          min_occupancy_pct?: number | null;
+          max_occupancy_pct?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["pricing_rules"]["Insert"]>;
+        Relationships: [];
+      };
+      pricing_rule_applications: {
+        Row: {
+          id: string;
+          session_id: string | null;
+          pricing_rule_id: string | null;
+          occupancy_pct_at_time: number | null;
+          applied_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id?: string | null;
+          pricing_rule_id?: string | null;
+          occupancy_pct_at_time?: number | null;
+          applied_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["pricing_rule_applications"]["Insert"]>;
+        Relationships: [];
+      };
+      customer_clv_snapshots: {
+        Row: {
+          id: string;
+          customer_id: string | null;
+          snapshot_date: string;
+          recency_days: number | null;
+          frequency_30d: number | null;
+          monetary_30d: number | null;
+          predicted_ltv: number | null;
+          segment: string | null;
+          computed_by: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id?: string | null;
+          snapshot_date?: string;
+          recency_days?: number | null;
+          frequency_30d?: number | null;
+          monetary_30d?: number | null;
+          predicted_ltv?: number | null;
+          segment?: string | null;
+          computed_by?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["customer_clv_snapshots"]["Insert"]>;
         Relationships: [];
       };
       next_best_actions: {

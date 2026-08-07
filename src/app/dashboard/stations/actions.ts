@@ -1,8 +1,10 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types/database";
+import { getEligibleSquadForCustomer, deductSquadHours } from "@/lib/squads/billing";
+import { computeRateForStation } from "@/lib/pricing/engine";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -25,7 +27,7 @@ export async function startSession(
 
   const { data: station, error: stationError } = await supabase
     .from("stations")
-    .select("id, cafe_id, base_hourly_rate, status")
+    .select("id, cafe_id, base_hourly_rate, status, tier")
     .eq("id", stationId)
     .single();
 
@@ -82,13 +84,29 @@ export async function startSession(
     customerId = newCustomer.id;
   }
 
+  const eligibleSquad = await getEligibleSquadForCustomer(customerId);
+
+  let computedRate = station.base_hourly_rate;
+  let rateReason = "base";
+  if (!eligibleSquad) {
+    const priced = await computeRateForStation(
+      stationId,
+      station.cafe_id,
+      station.base_hourly_rate,
+      station.tier
+    );
+    computedRate = priced.rate;
+    rateReason = priced.reason;
+  }
+
   const sessionInsert: Database["public"]["Tables"]["sessions"]["Insert"] = {
     cafe_id: station.cafe_id,
     station_id: stationId,
     customer_id: customerId,
+    squad_id: eligibleSquad?.squad.id ?? null,
     game_played: game,
-    rate_applied: station.base_hourly_rate,
-    rate_reason: "base",
+    rate_applied: eligibleSquad ? 0 : computedRate,
+    rate_reason: eligibleSquad ? "squad_pass" : rateReason,
   };
 
   const { data: session, error: sessionError } = await supabase
@@ -145,7 +163,7 @@ export async function endSession(sessionId: string): Promise<ActionResult> {
   const { data: session, error: sessionError } = await supabase
     .from("sessions")
     .select(
-      "id, cafe_id, station_id, customer_id, game_played, started_at, rate_applied, ended_at"
+      "id, cafe_id, station_id, customer_id, squad_id, game_played, started_at, rate_applied, ended_at"
     )
     .eq("id", sessionId)
     .single();
@@ -166,9 +184,13 @@ export async function endSession(sessionId: string): Promise<ActionResult> {
   const totalAmount =
     Math.round(durationHours * session.rate_applied * 100) / 100;
 
+  if (session.squad_id) {
+    await deductSquadHours(session.squad_id, durationMinutes);
+  }
+
   const sessionUpdate: Database["public"]["Tables"]["sessions"]["Update"] = {
     ended_at: endedAt.toISOString(),
-    
+
     ended_reason: "manual",
   };
 
