@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import type { Customer, Station } from "@/lib/types/database";
 import { StationCard, type StationWithSession } from "./StationCard";
 
 type ActiveSessionRow = {
   id: string;
   station_id: string;
+  customer_id: string | null;
   started_at: string;
   game_played: string | null;
   customers: Pick<Customer, "name" | "phone"> | null;
@@ -24,7 +25,7 @@ export default async function StationsPage() {
 
   const { data: activeSessions, error: sessionsError } = await supabase
     .from("sessions")
-    .select("id, station_id, started_at, game_played, customers(name, phone)")
+    .select("id, station_id, customer_id, started_at, game_played, customers(name, phone)")
     .is("ended_at", null);
 
   const sessionByStation = new Map<string, ActiveSessionRow>();
@@ -40,6 +41,7 @@ export default async function StationsPage() {
         activeSession: active
           ? {
               id: active.id,
+              customer_id: active.customer_id,
               started_at: active.started_at,
               game_played: active.game_played,
               customer: active.customers,

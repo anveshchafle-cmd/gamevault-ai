@@ -1,8 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useTransition } from "react";
 import type { Station } from "@/lib/types/database";
 import { endSession, startSession } from "./actions";
+import { fetchUpsellSuggestion, logUpsellSale } from "./upsellActions";
+import type { UpsellSuggestion } from "@/lib/upsell/engine";
 
 const GAME_OPTIONS = [
   "Valorant",
@@ -19,6 +21,7 @@ const GAME_OPTIONS = [
 
 export type ActiveSessionInfo = {
   id: string;
+  customer_id: string | null;
   started_at: string;
   game_played: string | null;
   customer: {
@@ -75,6 +78,29 @@ export function StationCard({ station }: { station: StationWithSession }) {
   const [customGame, setCustomGame] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [upsell, setUpsell] = useState<UpsellSuggestion | null>(null);
+  const [upsellLoading, setUpsellLoading] = useState(false);
+  const [upsellLogged, setUpsellLogged] = useState(false);
+
+  async function handleFetchUpsell() {
+    if (!station.activeSession?.customer_id) return;
+    setUpsellLoading(true);
+    const suggestion = await fetchUpsellSuggestion(station.activeSession.customer_id);
+    setUpsell(suggestion);
+    setUpsellLoading(false);
+  }
+
+  async function handleLogUpsell() {
+    if (!station.activeSession?.customer_id || !upsell) return;
+    await logUpsellSale(
+      station.cafe_id,
+      station.activeSession.customer_id,
+      station.activeSession.id,
+      upsell.itemName,
+      upsell.suggestedPrice
+    );
+    setUpsellLogged(true);
+  }
 
   const isMaintenance = station.status === "maintenance";
   const isOccupied = station.status === "occupied" && station.activeSession;
@@ -185,6 +211,37 @@ export function StationCard({ station }: { station: StationWithSession }) {
                 {station.activeSession.game_played ?? "Unknown"}
               </span>
             </p>
+          </div>
+
+          <div className="rounded-lg border border-neutral-700/60 bg-neutral-900/50 p-3">
+            {!upsell && (
+              <button
+                type="button"
+                onClick={handleFetchUpsell}
+                disabled={upsellLoading}
+                className="w-full text-xs text-neutral-400 hover:text-emerald-400 transition disabled:opacity-50"
+              >
+                {upsellLoading ? "Checking..." : "💡 Suggest Upsell"}
+              </button>
+            )}
+            {upsell && !upsellLogged && (
+              <div className="space-y-1.5">
+                <p className="text-xs text-neutral-300">
+                  {upsell.itemName} — ₹{upsell.suggestedPrice}
+                </p>
+                <p className="text-[10px] text-neutral-500">{upsell.reason}</p>
+                <button
+                  type="button"
+                  onClick={handleLogUpsell}
+                  className="w-full rounded bg-emerald-800 hover:bg-emerald-700 px-2 py-1 text-xs transition"
+                >
+                  Add to bill
+                </button>
+              </div>
+            )}
+            {upsellLogged && (
+              <p className="text-xs text-emerald-400">✓ Added to bill</p>
+            )}
           </div>
 
           <button
