@@ -1,6 +1,7 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import RecomputeClvButton from "./RecomputeClvButton";
 import EditCustomerButton from "./EditCustomerButton";
+import CopyReferralLinkButton from "./CopyReferralLinkButton";
 
 const SEGMENT_STYLES: Record<string, { label: string; color: string }> = {
   whale: { label: "🐋 Whale", color: "bg-purple-900/50 text-purple-300" },
@@ -25,7 +26,7 @@ export default async function ClvPage() {
 
   const { data: customers, error } = await supabase
     .from("customers")
-    .select("id, cafe_id, name, phone, clv_tier, clv_score, churn_risk_score, comp_tier")
+    .select("id, cafe_id, name, phone, clv_tier, clv_score, churn_risk_score, comp_tier, referral_code")
     .order("clv_score", { ascending: false, nullsFirst: false });
 
   const segmentCounts: Record<string, number> = {};
@@ -72,6 +73,7 @@ export default async function ClvPage() {
               <th className="text-left px-4 py-2">Comp Tier</th>
               <th className="text-left px-4 py-2">Predicted LTV</th>
               <th className="text-left px-4 py-2">Churn Risk</th>
+              <th className="text-left px-4 py-2">Referral Link</th>
               <th className="text-left px-4 py-2">Edit</th>
             </tr>
           </thead>
@@ -100,6 +102,9 @@ export default async function ClvPage() {
                       {c.churn_risk_score != null ? `${(c.churn_risk_score * 100).toFixed(0)}%` : "—"}
                     </td>
                     <td className="px-4 py-2">
+                      <CopyReferralLinkButton referralCode={c.referral_code} />
+                    </td>
+                    <td className="px-4 py-2">
                       <EditCustomerButton customerId={c.id} cafeId={c.cafe_id} />
                     </td>
                   </tr>
@@ -107,7 +112,7 @@ export default async function ClvPage() {
               })
             ) : (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-neutral-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
                   No customers yet.
                 </td>
               </tr>

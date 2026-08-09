@@ -38,6 +38,9 @@ export default function DashboardLayout({
           <Link href="/dashboard/coaching" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
             Coaching
           </Link>
+          <Link href="/dashboard/dailyspin" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
+            Daily Spin
+          </Link>
         </div>
         <LogoutButton />
       </nav>
