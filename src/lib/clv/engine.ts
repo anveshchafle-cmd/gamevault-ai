@@ -1,9 +1,6 @@
 ﻿import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getCompTier } from "@/lib/comps/engine";
 
-// Rule-based CLV/RFM scoring for v1. Recomputed on demand (or via a
-// scheduled job later). Replace with a trained model once there's
-// enough historical data — the customer_clv_snapshots table already
-// tracks which system produced each score (computed_by field).
 export async function recomputeClvForCafe(cafeId: string) {
   const supabase = createServiceRoleClient();
 
@@ -33,7 +30,7 @@ export async function recomputeClvForCafe(cafeId: string) {
       .eq("customer_id", customer.id)
       .gte("created_at", thirtyDaysAgo.toISOString());
 
-      const { count: referralCount } = await supabase
+    const { count: referralCount } = await supabase
       .from("customer_events")
       .select("id", { count: "exact", head: true })
       .eq("customer_id", customer.id)
@@ -49,7 +46,6 @@ export async function recomputeClvForCafe(cafeId: string) {
       recencyDays = Math.floor((Date.now() - lastVisit.getTime()) / (1000 * 60 * 60 * 24));
     }
 
-    // Simple rule-based segmentation
     let segment = "tourist";
     if (recencyDays !== null && recencyDays > 14) {
       segment = "at_risk";
@@ -63,7 +59,8 @@ export async function recomputeClvForCafe(cafeId: string) {
       segment = "tourist";
     }
 
-    const predictedLtv = monetary30d * 12; // naive annualized estimate for v1
+    const predictedLtv = monetary30d * 12;
+    const compTierInfo = getCompTier(monetary30d);
 
     await supabase.from("customer_clv_snapshots").insert({
       customer_id: customer.id,
@@ -77,7 +74,11 @@ export async function recomputeClvForCafe(cafeId: string) {
 
     await supabase
       .from("customers")
-      .update({ clv_tier: segment, clv_score: predictedLtv })
+      .update({
+        clv_tier: segment,
+        clv_score: predictedLtv,
+        comp_tier: compTierInfo.tier,
+      })
       .eq("id", customer.id);
 
     scored++;

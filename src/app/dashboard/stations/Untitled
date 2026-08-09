@@ -1,4 +1,5 @@
-﻿import { createClient } from "@/lib/supabase/server";
+@'
+import { createClient } from "@/lib/supabase/server";
 import RecomputeClvButton from "./RecomputeClvButton";
 import EditCustomerButton from "./EditCustomerButton";
 
@@ -118,3 +119,4 @@ export default async function ClvPage() {
     </div>
   );
 }
+'@ | Out-File -FilePath "src\app\dashboard\clv\page.tsx" -Encoding utf8

@@ -1,4 +1,4 @@
-// Hand-written types matching schema/001-004.sql.
+﻿// Hand-written types matching schema/001-004.sql.
 // Once the schema stabilizes, you can replace this file by running:
 //   npx supabase gen types typescript --project-id <your-project-ref> > src/lib/types/database.ts
 // which auto-generates from the live database. For now, this covers
@@ -65,6 +65,7 @@ export type Database = {
           clv_score: number | null;
           churn_risk_score: number | null;
           cafe_coins: number;
+          comp_tier: string;
           created_at: string;
         };
         Insert: {
@@ -81,6 +82,7 @@ export type Database = {
           churn_risk_score?: number | null;
           cafe_coins?: number;
           created_at?: string;
+          comp_tier?: string;
         };
         Update: Partial<Database["public"]["Tables"]["customers"]["Insert"]>;
         Relationships: [];
@@ -296,6 +298,60 @@ export type Database = {
           applied_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["pricing_rule_applications"]["Insert"]>;
+        Relationships: [];
+      };
+      coaches: {
+        Row: {
+          id: string;
+          cafe_id: string;
+          customer_id: string | null;
+          display_name: string;
+          game_specialty: string;
+          hourly_rate: number;
+          bio: string | null;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          cafe_id: string;
+          customer_id?: string | null;
+          display_name: string;
+          game_specialty: string;
+          hourly_rate: number;
+          bio?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["coaches"]["Insert"]>;
+        Relationships: [];
+      };
+      coaching_bookings: {
+        Row: {
+          id: string;
+          cafe_id: string;
+          coach_id: string | null;
+          student_customer_id: string | null;
+          scheduled_at: string;
+          duration_hours: number;
+          total_price: number;
+          cafe_commission_pct: number;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          cafe_id: string;
+          coach_id?: string | null;
+          student_customer_id?: string | null;
+          scheduled_at: string;
+          duration_hours?: number;
+          total_price: number;
+          cafe_commission_pct?: number;
+          status?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["coaching_bookings"]["Insert"]>;
         Relationships: [];
       };
       customer_clv_snapshots: {
