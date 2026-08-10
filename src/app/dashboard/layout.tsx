@@ -1,48 +1,55 @@
 ﻿import Link from "next/link";
 import LogoutButton from "./components/LogoutButton";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const navGroups = [
+  { label: "Operations", items: [
+    { href: "/dashboard/stations", label: "Stations" },
+    { href: "/dashboard/actions", label: "Actions" },
+  ]},
+  { label: "Customers", items: [
+    { href: "/dashboard/clv", label: "Customers" },
+    { href: "/dashboard/retention", label: "Retention" },
+    { href: "/dashboard/squads", label: "Squads" },
+  ]},
+  { label: "Growth", items: [
+    { href: "/dashboard/battlepass", label: "Battle Pass" },
+    { href: "/dashboard/leaderboard", label: "Leaderboard" },
+    { href: "/dashboard/coaching", label: "Coaching" },
+    { href: "/dashboard/dailyspin", label: "Daily Spin" },
+  ]},
+  { label: "Revenue", items: [
+    { href: "/dashboard/pricing", label: "Pricing" },
+  ]},
+];
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-neutral-900 text-neutral-100">
-      <nav className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <span className="font-bold text-emerald-400">GameVault AI</span>
-          <Link href="/dashboard/actions" className="text-sm text-emerald-400 hover:text-emerald-300 transition font-medium">
-            🎯 Actions
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <nav className="border-b border-[var(--border)] px-8 py-5">
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/dashboard/actions" className="text-base font-semibold tracking-tight">
+            GameVault
           </Link>
-          <Link href="/dashboard/stations" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Stations
-          </Link>
-          <Link href="/dashboard/retention" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Retention
-          </Link>
-          <Link href="/dashboard/battlepass" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Battle Pass
-          </Link>
-          <Link href="/dashboard/leaderboard" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Leaderboard
-          </Link>
-          <Link href="/dashboard/squads" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Squads
-          </Link>
-          <Link href="/dashboard/pricing" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Pricing
-          </Link>
-          <Link href="/dashboard/clv" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Customers
-          </Link>
-          <Link href="/dashboard/coaching" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Coaching
-          </Link>
-          <Link href="/dashboard/dailyspin" className="text-sm text-neutral-400 hover:text-neutral-100 transition">
-            Daily Spin
-          </Link>
+          <LogoutButton />
         </div>
-        <LogoutButton />
+        <div className="flex flex-wrap items-start gap-x-10 gap-y-3">
+          {navGroups.map((group) => (
+            <div key={group.label} className="flex flex-col gap-1.5">
+              <span className="label opacity-60">{group.label}</span>
+              <div className="flex flex-wrap items-center gap-x-4">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="text-sm text-[var(--text-dim)] hover:text-[var(--text)] transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </nav>
       <main>{children}</main>
     </div>
