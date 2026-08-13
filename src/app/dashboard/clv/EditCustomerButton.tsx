@@ -40,40 +40,33 @@ export default function EditCustomerButton({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-xs text-neutral-500 hover:text-neutral-300 transition"
+        className="text-xs text-[var(--text-dim)] hover:text-[var(--text)] transition-colors"
       >
-        + referral/DOB
+        Edit
       </button>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1.5 bg-neutral-900 border border-neutral-700 rounded p-2 text-xs">
-      {error && <p className="text-red-400">{error}</p>}
+    <div className="flex flex-col gap-1.5 surface rounded p-2 text-xs">
+      {error && <p className="text-[var(--danger)]">{error}</p>}
       <input
         value={referredByPhone}
         onChange={(e) => setReferredByPhone(e.target.value)}
-        placeholder="Referrer's phone (optional)"
-        className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1"
+        placeholder="Referrer's phone"
+        className="rounded border border-[var(--border)] bg-transparent px-2 py-1"
       />
       <input
         type="date"
         value={dob}
         onChange={(e) => setDob(e.target.value)}
-        className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1"
+        className="rounded border border-[var(--border)] bg-transparent px-2 py-1"
       />
       <div className="flex gap-1.5">
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="rounded bg-emerald-800 hover:bg-emerald-700 disabled:opacity-50 px-2 py-1"
-        >
-          {loading ? "Saving..." : "Save"}
+        <button onClick={handleSave} disabled={loading} className="btn-primary rounded px-2 py-1 disabled:opacity-50">
+          {loading ? "…" : "Save"}
         </button>
-        <button
-          onClick={() => setOpen(false)}
-          className="rounded border border-neutral-700 px-2 py-1"
-        >
+        <button onClick={() => setOpen(false)} className="btn-outline rounded px-2 py-1">
           Cancel
         </button>
       </div>

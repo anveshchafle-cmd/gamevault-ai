@@ -14,7 +14,7 @@ export default function MeasureOutcomesButton() {
     try {
       const res = await fetch("/api/cron/measure-nba-outcomes");
       const json = await res.json();
-      setResult(`Measured ${json.measured} outcomes.`);
+      setResult(`${json.measured} measured`);
       router.refresh();
     } finally {
       setLoading(false);
@@ -22,15 +22,15 @@ export default function MeasureOutcomesButton() {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex items-center gap-2">
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded-md border border-neutral-700 hover:border-neutral-500 px-3 py-1.5 text-xs transition disabled:opacity-50"
+        className="btn-outline rounded px-3 py-1.5 text-xs disabled:opacity-50"
       >
-        {loading ? "Measuring..." : "Measure Outcomes"}
+        {loading ? "Measuring…" : "Measure Outcomes"}
       </button>
-      {result && <p className="text-[10px] text-neutral-500">{result}</p>}
+      {result && <span className="text-xs text-[var(--text-dim)]">{result}</span>}
     </div>
   );
 }

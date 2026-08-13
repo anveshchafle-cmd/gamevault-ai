@@ -41,23 +41,20 @@ export default function SquadMembers({
   }
 
   return (
-    <div className="mt-3 pt-3 border-t border-neutral-800">
+    <div className="pt-4 border-t border-[var(--border)]">
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs text-neutral-400 hover:text-neutral-200 transition"
+        className="text-xs text-[var(--text-dim)] hover:text-[var(--text)] transition-colors"
       >
-        {open ? "v" : ">"} {members.length} member{members.length !== 1 ? "s" : ""}
+        {members.length} member{members.length !== 1 ? "s" : ""}
       </button>
 
       {open && (
-        <div className="mt-2 space-y-1.5">
+        <div className="mt-3 space-y-2">
           {members.map((m) => (
             <div key={m.id} className="flex items-center justify-between text-xs">
-              <span className="text-neutral-300">{m.name ?? m.phone}</span>
-              <button
-                onClick={() => handleRemove(m.id)}
-                className="text-neutral-600 hover:text-red-400 transition"
-              >
+              <span>{m.name ?? m.phone}</span>
+              <button onClick={() => handleRemove(m.id)} className="text-[var(--text-dim)] hover:text-[var(--danger)] transition-colors">
                 remove
               </button>
             </div>
@@ -68,17 +65,13 @@ export default function SquadMembers({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+91XXXXXXXXXX"
-              className="flex-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs"
+              className="flex-1 rounded border border-[var(--border)] bg-transparent px-2 py-1 text-xs"
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded bg-emerald-800 hover:bg-emerald-700 disabled:opacity-50 px-2 py-1 text-xs"
-            >
+            <button type="submit" disabled={loading} className="btn-primary rounded px-2 py-1 text-xs disabled:opacity-50">
               Add
             </button>
           </form>
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
         </div>
       )}
     </div>

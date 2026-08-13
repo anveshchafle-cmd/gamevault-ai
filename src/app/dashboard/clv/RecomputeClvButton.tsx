@@ -21,9 +21,9 @@ export default function RecomputeClvButton() {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="rounded-md bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 px-4 py-2 text-sm font-medium transition"
+      className="btn-primary rounded px-4 py-2 text-sm disabled:opacity-50"
     >
-      {loading ? "Scoring..." : "Recompute CLV"}
+      {loading ? "Scoring…" : "Recompute CLV"}
     </button>
   );
 }

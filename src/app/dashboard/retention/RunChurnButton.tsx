@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,27 +14,25 @@ export default function RunChurnButton() {
     try {
       const res = await fetch("/api/cron/churn-detection");
       const json = await res.json();
-      setLastResult(
-        `Scanned ${json.scanned} customers, sent ${json.messagesSent} messages.`
-      );
+      setLastResult(`Scanned ${json.scanned}, sent ${json.messagesSent}`);
       router.refresh();
     } catch {
-      setLastResult("Something went wrong — check the terminal for errors.");
+      setLastResult("Something went wrong.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div className="flex items-center gap-3">
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded-md bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 px-4 py-2 text-sm font-medium transition"
+        className="btn-primary rounded px-4 py-2 text-sm disabled:opacity-50"
       >
-        {loading ? "Running..." : "Run Churn Detection Now"}
+        {loading ? "Running…" : "Run Churn Detection"}
       </button>
-      {lastResult && <p className="text-xs text-neutral-400">{lastResult}</p>}
+      {lastResult && <span className="text-xs text-[var(--text-dim)]">{lastResult}</span>}
     </div>
   );
 }

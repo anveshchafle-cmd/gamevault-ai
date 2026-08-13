@@ -3,22 +3,22 @@ import RecomputeClvButton from "./RecomputeClvButton";
 import EditCustomerButton from "./EditCustomerButton";
 import CopyReferralLinkButton from "./CopyReferralLinkButton";
 
-const SEGMENT_STYLES: Record<string, { label: string; color: string }> = {
-  whale: { label: "🐋 Whale", color: "bg-purple-900/50 text-purple-300" },
-  grinder: { label: "⚙️ Grinder", color: "bg-blue-900/50 text-blue-300" },
-  socialite: { label: "🤝 Socialite", color: "bg-emerald-900/50 text-emerald-300" },
-  tourist: { label: "🎒 Tourist", color: "bg-neutral-800 text-neutral-400" },
-  at_risk: { label: "⚠️ At Risk", color: "bg-red-900/50 text-red-300" },
-  unscored: { label: "Unscored", color: "bg-neutral-800 text-neutral-500" },
+const SEGMENT_LABEL: Record<string, string> = {
+  whale: "Whale",
+  grinder: "Grinder",
+  socialite: "Socialite",
+  tourist: "Tourist",
+  at_risk: "At Risk",
+  unscored: "Unscored",
 };
 
-const COMP_TIER_STYLES: Record<string, string> = {
-  diamond: "bg-cyan-900/50 text-cyan-300",
-  platinum: "bg-slate-700/50 text-slate-200",
-  gold: "bg-yellow-900/50 text-yellow-300",
-  silver: "bg-neutral-700/50 text-neutral-300",
-  bronze: "bg-orange-900/50 text-orange-300",
-  none: "bg-neutral-800 text-neutral-600",
+const COMP_LABEL: Record<string, string> = {
+  diamond: "Diamond",
+  platinum: "Platinum",
+  gold: "Gold",
+  silver: "Silver",
+  bronze: "Bronze",
+  none: "—",
 };
 
 export default async function ClvPage() {
@@ -36,89 +36,53 @@ export default async function ClvPage() {
   });
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-neutral-100 p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] px-8 py-12 max-w-6xl mx-auto">
+      <div className="flex items-start justify-between mb-10">
         <div>
-          <h1 className="text-2xl font-bold">Customer Intelligence</h1>
-          <p className="text-neutral-400 text-sm">
-            CLV segmentation + comp tiers — recomputed on demand from last 30 days
-          </p>
+          <p className="label mb-2">Customer Intelligence</p>
+          <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
         </div>
         <RecomputeClvButton />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        {Object.entries(SEGMENT_STYLES).map(([key, style]) => (
-          <div key={key} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3 text-center">
-            <div className={`inline-block text-xs px-2 py-0.5 rounded mb-1 ${style.color}`}>
-              {style.label}
-            </div>
-            <div className="text-xl font-bold">{segmentCounts[key] ?? 0}</div>
+      <div className="grid grid-cols-5 gap-6 mb-10 pb-10 border-b border-[var(--border)]">
+        {Object.entries(SEGMENT_LABEL).map(([key, label]) => (
+          <div key={key}>
+            <p className="label mb-1">{label}</p>
+            <p className="font-stat text-2xl font-semibold">{segmentCounts[key] ?? 0}</p>
           </div>
         ))}
       </div>
 
       {error && (
-        <div className="mb-6 rounded-md border border-red-800 bg-red-950/40 px-4 py-3 text-red-300">
+        <div className="surface rounded p-4 border-[var(--danger)] text-[var(--danger)] text-sm mb-6">
           Failed to load customers: {error.message}
         </div>
       )}
 
-      <div className="rounded-lg border border-neutral-800 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-neutral-800 text-neutral-400">
-            <tr>
-              <th className="text-left px-4 py-2">Customer</th>
-              <th className="text-left px-4 py-2">Segment</th>
-              <th className="text-left px-4 py-2">Comp Tier</th>
-              <th className="text-left px-4 py-2">Predicted LTV</th>
-              <th className="text-left px-4 py-2">Churn Risk</th>
-              <th className="text-left px-4 py-2">Referral Link</th>
-              <th className="text-left px-4 py-2">Edit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers && customers.length > 0 ? (
-              customers.map((c) => {
-                const style = SEGMENT_STYLES[c.clv_tier || "unscored"];
-                const compStyle = COMP_TIER_STYLES[c.comp_tier || "none"];
-                return (
-                  <tr key={c.id} className="border-t border-neutral-800">
-                    <td className="px-4 py-2">{c.name ?? c.phone}</td>
-                    <td className="px-4 py-2">
-                      <span className={`text-xs px-2 py-0.5 rounded ${style.color}`}>
-                        {style.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className={`text-xs px-2 py-0.5 rounded capitalize ${compStyle}`}>
-                        {c.comp_tier ?? "none"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-neutral-300">
-                      {c.clv_score ? `₹${Number(c.clv_score).toFixed(0)}` : "—"}
-                    </td>
-                    <td className="px-4 py-2 text-neutral-400">
-                      {c.churn_risk_score != null ? `${(c.churn_risk_score * 100).toFixed(0)}%` : "—"}
-                    </td>
-                    <td className="px-4 py-2">
-                      <CopyReferralLinkButton referralCode={c.referral_code} />
-                    </td>
-                    <td className="px-4 py-2">
-                      <EditCustomerButton customerId={c.id} cafeId={c.cafe_id} />
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
-                  No customers yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="space-y-0">
+        <div className="grid grid-cols-6 gap-4 pb-3 border-b border-[var(--border)]">
+          <span className="label">Customer</span>
+          <span className="label">Segment</span>
+          <span className="label">Comp Tier</span>
+          <span className="label">LTV</span>
+          <span className="label">Referral</span>
+          <span className="label">Edit</span>
+        </div>
+        {customers && customers.length > 0 ? (
+          customers.map((c) => (
+            <div key={c.id} className="grid grid-cols-6 gap-4 py-4 border-b border-[var(--border)] items-center text-sm">
+              <span>{c.name ?? c.phone}</span>
+              <span className="text-[var(--text-dim)]">{SEGMENT_LABEL[c.clv_tier || "unscored"]}</span>
+              <span className="text-[var(--text-dim)]">{COMP_LABEL[c.comp_tier || "none"]}</span>
+              <span className="font-stat">{c.clv_score ? `₹${Number(c.clv_score).toFixed(0)}` : "—"}</span>
+              <CopyReferralLinkButton referralCode={c.referral_code} />
+              <EditCustomerButton customerId={c.id} cafeId={c.cafe_id} />
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-[var(--text-dim)] py-8">No customers yet.</p>
+        )}
       </div>
     </div>
   );

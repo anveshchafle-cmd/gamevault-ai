@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,6 @@ export default function CreateSquadForm({ cafeId }: { cafeId: string }) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     const result = await createSquad({
       cafeId,
       name: form.name,
@@ -41,13 +40,11 @@ export default function CreateSquadForm({ cafeId }: { cafeId: string }) {
       monthlyFee: preset.fee,
       leaderPhone: form.leaderPhone,
     });
-
     setLoading(false);
     if (!result.success) {
       setError(result.error ?? "Something went wrong");
       return;
     }
-
     setOpen(false);
     setForm({ name: "", squadType: "squad", planTier: "bronze", leaderPhone: "" });
     router.refresh();
@@ -55,43 +52,29 @@ export default function CreateSquadForm({ cafeId }: { cafeId: string }) {
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="rounded-md bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-sm font-medium transition"
-      >
-        + Create Squad Pass
+      <button onClick={() => setOpen(true)} className="btn-primary rounded px-4 py-2 text-sm">
+        + New Squad
       </button>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-lg border border-neutral-800 bg-neutral-950 p-4 max-w-lg"
-    >
-      {error && (
-        <div className="mb-3 rounded-md border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-          {error}
-        </div>
-      )}
+    <form onSubmit={handleSubmit} className="surface rounded-lg p-5 max-w-lg mb-8">
+      {error && <p className="text-sm text-[var(--danger)] mb-3">{error}</p>}
       <div className="grid grid-cols-2 gap-3">
         <label className="block col-span-2">
-          <span className="text-xs text-neutral-400">Squad name</span>
+          <span className="label block mb-1">Squad name</span>
           <input
-            required
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm"
+            required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="e.g. The Night Owls"
+            className="w-full rounded border border-[var(--border)] bg-transparent px-3 py-1.5 text-sm"
           />
         </label>
-
         <label className="block">
-          <span className="text-xs text-neutral-400">Type</span>
+          <span className="label block mb-1">Type</span>
           <select
-            value={form.squadType}
-            onChange={(e) => setForm({ ...form, squadType: e.target.value as any })}
-            className="mt-1 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm"
+            value={form.squadType} onChange={(e) => setForm({ ...form, squadType: e.target.value as any })}
+            className="w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm"
           >
             <option value="squad">Squad</option>
             <option value="family">Family</option>
@@ -99,13 +82,11 @@ export default function CreateSquadForm({ cafeId }: { cafeId: string }) {
             <option value="corporate">Corporate</option>
           </select>
         </label>
-
         <label className="block">
-          <span className="text-xs text-neutral-400">Plan</span>
+          <span className="label block mb-1">Plan</span>
           <select
-            value={form.planTier}
-            onChange={(e) => setForm({ ...form, planTier: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm"
+            value={form.planTier} onChange={(e) => setForm({ ...form, planTier: e.target.value })}
+            className="w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm"
           >
             <option value="bronze">Bronze (40h, ₹1999)</option>
             <option value="silver">Silver (80h, ₹3499)</option>
@@ -115,32 +96,20 @@ export default function CreateSquadForm({ cafeId }: { cafeId: string }) {
             <option value="corporate_startup">Corporate Startup (100h, ₹9999)</option>
           </select>
         </label>
-
         <label className="block col-span-2">
-          <span className="text-xs text-neutral-400">Squad leader's phone</span>
+          <span className="label block mb-1">Squad leader's phone</span>
           <input
-            required
-            value={form.leaderPhone}
-            onChange={(e) => setForm({ ...form, leaderPhone: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm"
+            required value={form.leaderPhone} onChange={(e) => setForm({ ...form, leaderPhone: e.target.value })}
             placeholder="+91XXXXXXXXXX"
+            className="w-full rounded border border-[var(--border)] bg-transparent px-3 py-1.5 text-sm"
           />
         </label>
       </div>
-
       <div className="mt-4 flex gap-2">
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-md bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 px-4 py-1.5 text-sm font-medium transition"
-        >
-          {loading ? "Creating..." : "Create"}
+        <button type="submit" disabled={loading} className="btn-primary rounded px-4 py-1.5 text-sm disabled:opacity-50">
+          {loading ? "Creating…" : "Create"}
         </button>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="rounded-md border border-neutral-700 px-4 py-1.5 text-sm transition"
-        >
+        <button type="button" onClick={() => setOpen(false)} className="btn-outline rounded px-4 py-1.5 text-sm">
           Cancel
         </button>
       </div>

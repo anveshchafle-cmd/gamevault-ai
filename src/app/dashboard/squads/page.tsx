@@ -21,84 +21,66 @@ export default async function SquadsPage() {
   const squadIds = (squads ?? []).map((s: any) => s.id);
   const { data: allMembers } =
     squadIds.length > 0
-      ? await supabase
-          .from("customers")
-          .select("id, name, phone, squad_id")
-          .in("squad_id", squadIds)
+      ? await supabase.from("customers").select("id, name, phone, squad_id").in("squad_id", squadIds)
       : { data: [] };
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-neutral-100 p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] px-8 py-12 max-w-6xl mx-auto">
+      <div className="flex items-start justify-between mb-10">
         <div>
-          <h1 className="text-2xl font-bold">Squad Passes</h1>
-          <p className="text-neutral-400 text-sm">
-            Shared-hours group subscriptions — Squad, Family, College Gang, Corporate
-          </p>
+          <p className="label mb-2">Shared-Hour Group Subscriptions</p>
+          <h1 className="text-3xl font-bold tracking-tight">Squads</h1>
         </div>
+        {cafe && <CreateSquadForm cafeId={cafe.id} />}
       </div>
 
-      {cafe && <CreateSquadForm cafeId={cafe.id} />}
-
       {error && (
-        <div className="mt-6 rounded-md border border-red-800 bg-red-950/40 px-4 py-3 text-red-300">
+        <div className="surface rounded p-4 border-[var(--danger)] text-[var(--danger)] text-sm mb-6">
           Failed to load squads: {error.message}
         </div>
       )}
 
-      <div className="mt-6 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {squads && squads.length > 0 ? (
           squads.map((s: any) => {
-            const usedPct =
-              s.shared_hours_pool > 0
-                ? Math.min(100, (s.hours_used_this_cycle / s.shared_hours_pool) * 100)
-                : 0;
+            const usedPct = s.shared_hours_pool > 0
+              ? Math.min(100, (s.hours_used_this_cycle / s.shared_hours_pool) * 100)
+              : 0;
             const members = (allMembers ?? []).filter((m: any) => m.squad_id === s.id);
 
             return (
-              <div
-                key={s.id}
-                className="rounded-lg border border-neutral-800 bg-neutral-950 p-4"
-              >
+              <div key={s.id} className="surface rounded-lg p-5">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-semibold">{s.name}</h3>
-                  <span className="text-[10px] uppercase tracking-wide bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded">
-                    {s.squad_type}
-                  </span>
+                  <span className="label">{s.squad_type}</span>
                 </div>
-                <p className="text-xs text-neutral-500 mb-3">
-                  Leader: {s.leader?.name ?? s.leader?.phone ?? "Unassigned"} · {s.plan_tier ?? "custom"}
+                <p className="text-xs text-[var(--text-dim)] mb-4">
+                  {s.leader?.name ?? s.leader?.phone ?? "Unassigned"} &middot; {s.plan_tier ?? "custom"}
                 </p>
 
-                <div className="mb-1 flex justify-between text-xs text-neutral-400">
-                  <span>
-                    {s.hours_used_this_cycle}h / {s.shared_hours_pool}h used
-                  </span>
+                <div className="flex justify-between text-xs text-[var(--text-dim)] mb-1.5">
+                  <span>{s.hours_used_this_cycle}h / {s.shared_hours_pool}h</span>
                   <span>{usedPct.toFixed(0)}%</span>
                 </div>
-                <div className="h-2 rounded-full bg-neutral-800 overflow-hidden">
+                <div className="h-1 rounded-full bg-[var(--border)] overflow-hidden mb-4">
                   <div
-                    className={`h-full ${usedPct > 90 ? "bg-red-500" : "bg-emerald-600"}`}
+                    className={`h-full ${usedPct > 90 ? "bg-[var(--danger)]" : "bg-[var(--accent)]"}`}
                     style={{ width: `${usedPct}%` }}
                   />
                 </div>
 
                 {s.monthly_fee && (
-                  <p className="text-xs text-neutral-500 mt-3">
-                    ₹{s.monthly_fee}/month · {s.streak_weeks} week streak
+                  <p className="text-xs text-[var(--text-dim)] mb-4">
+                    ₹{s.monthly_fee}/month &middot; {s.streak_weeks} week streak
                   </p>
                 )}
 
-                {cafe && (
-                  <SquadMembers squadId={s.id} cafeId={cafe.id} members={members} />
-                )}
+                {cafe && <SquadMembers squadId={s.id} cafeId={cafe.id} members={members} />}
               </div>
             );
           })
         ) : (
-          <div className="col-span-full text-center text-neutral-500 py-12">
-            No squads yet — create one above.
-          </div>
+          <p className="text-sm text-[var(--text-dim)] col-span-full py-8">No squads yet &mdash; create one above.</p>
         )}
       </div>
     </div>
