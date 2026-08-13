@@ -26,7 +26,7 @@ export default async function OpsAgentPage() {
 
       <RunAgentButton />
 
-      {payload && (
+      {lastRun && payload && (
         <div className="mt-10">
           <p className="label mb-1">Last Run</p>
           <p className="text-sm text-[var(--text-dim)] mb-6">

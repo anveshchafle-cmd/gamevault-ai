@@ -5,6 +5,7 @@ const navGroups = [
   { label: "Operations", items: [
     { href: "/dashboard/stations", label: "Stations" },
     { href: "/dashboard/actions", label: "Actions" },
+    { href: "/dashboard/ops-agent", label: "Ops Agent" },
   ]},
   { label: "Customers", items: [
     { href: "/dashboard/clv", label: "Customers" },
