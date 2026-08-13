@@ -28,7 +28,12 @@ export async function sendFomoCampaign(
     return { success: false, error: error?.message ?? "Failed to load customers" };
   }
 
+  if (customers.length === 0) {
+    return { success: false, error: "No customers found matching that segment." };
+  }
+
   let sent = 0;
+  let failed = 0;
   for (const customer of customers) {
     const messageText = fomoFlashMessage(
       customer.name ?? "there",
@@ -42,9 +47,18 @@ export async function sendFomoCampaign(
       campaignType: "fomo_flash",
       messageText,
     });
-    if (result) sent++;
+    if (result) {
+      sent++;
+    } else {
+      failed++;
+    }
   }
 
   revalidatePath("/dashboard/retention");
-  return { success: true, sent };
+  return {
+    success: true,
+    sent,
+    failed,
+    totalFound: customers.length,
+  };
 }
