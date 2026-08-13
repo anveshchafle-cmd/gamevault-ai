@@ -32,7 +32,7 @@ The actual offer to mention: ${offerDescription}
 Only reference the real occupancy numbers above if they're genuinely relevant to urgency (e.g. cafe is nearly full). Don't force it in if it doesn't fit naturally.`;
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-5",
+    model: "claude-sonnet-5",
     max_tokens: 200,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
