@@ -73,13 +73,16 @@ export async function GET(request: Request) {
   report.finishedAt = finishedAt.toISOString();
   report.durationSeconds = Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000);
 
-  // Log this run for the owner report history
-  await supabase.from("customer_events").insert({
-    cafe_id: cafes[0].id,
-    customer_id: null,
-    event_type: "daily_ops_run",
-    event_payload: report,
-  });
+  // Log this run for the owner report history — once per cafe, so each
+  // tenant sees their own report, not just whichever cafe was first.
+  for (const cafe of cafes) {
+    await supabase.from("customer_events").insert({
+      cafe_id: cafe.id,
+      customer_id: null,
+      event_type: "daily_ops_run",
+      event_payload: report,
+    });
+  }
 
   return NextResponse.json(report);
 }
