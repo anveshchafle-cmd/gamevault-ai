@@ -4,6 +4,7 @@ import { recomputeClvForCafe } from "@/lib/clv/engine";
 import { generateNextBestActions } from "@/lib/nba/engine";
 import { rolloverExpiredSquadCycles } from "@/lib/squads/rollover";
 import { generateExecutiveSummary } from "@/lib/ai/executiveSummary";
+import { sendOwnerReportMessage } from "@/lib/whatsapp/ownerReport";
 
 export async function GET(request: Request) {
   const baseUrl = new URL(request.url).origin;
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
   const report: Record<string, any> = { startedAt: startedAt.toISOString() };
 
   const supabase = createServiceRoleClient();
-  const { data: cafes } = await supabase.from("cafes").select("id");
+  const { data: cafes } = await supabase.from("cafes").select("id, owner_phone");
 
   if (!cafes) {
     return NextResponse.json({ error: "No cafes found" }, { status: 404 });
@@ -68,11 +69,10 @@ export async function GET(request: Request) {
   report.finishedAt = finishedAt.toISOString();
   report.durationSeconds = Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000);
 
-  // AI executive summary — synthesizes the whole run into one strategic
-  // takeaway. Gracefully absent (report still fully works) if this fails.
   const executiveSummary = await generateExecutiveSummary(report);
   report.executiveSummary = executiveSummary;
 
+  let ownerReportsSent = 0;
   for (const cafe of cafes) {
     await supabase.from("customer_events").insert({
       cafe_id: cafe.id,
@@ -80,7 +80,14 @@ export async function GET(request: Request) {
       event_type: "daily_ops_run",
       event_payload: report,
     });
+
+    // Send the summary straight to the owner's WhatsApp, if they've set a number
+    if (cafe.owner_phone && executiveSummary) {
+      const sent = await sendOwnerReportMessage(cafe.id, cafe.owner_phone, executiveSummary);
+      if (sent) ownerReportsSent++;
+    }
   }
+  report.ownerReportsSent = ownerReportsSent;
 
   return NextResponse.json(report);
 }

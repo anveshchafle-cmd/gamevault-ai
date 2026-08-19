@@ -14,6 +14,7 @@ export type Database = {
           city: string | null;
           timezone: string;
           whatsapp_business_number: string | null;
+          owner_phone: string | null;
           created_at: string;
         };
         Insert: {
@@ -23,6 +24,7 @@ export type Database = {
           timezone?: string;
           whatsapp_business_number?: string | null;
           created_at?: string;
+          owner_phone?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["cafes"]["Insert"]>;
         Relationships: [];
