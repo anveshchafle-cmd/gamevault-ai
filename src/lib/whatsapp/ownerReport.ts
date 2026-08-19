@@ -1,13 +1,10 @@
 ﻿import { createServiceRoleClient } from "@/lib/supabase/server";
 
-// Sends the daily executive summary directly to the cafe owner's own
-// WhatsApp. Separate from sendWhatsAppMessage since this isn't tied to
-// a customer record — it's a message to the owner themselves.
 export async function sendOwnerReportMessage(
   cafeId: string,
   ownerPhone: string,
   messageText: string
-) {
+): Promise<{ success: boolean; error?: string }> {
   const isLive = process.env.WHATSAPP_MODE === "live";
   const supabase = createServiceRoleClient();
 
@@ -19,7 +16,7 @@ export async function sendOwnerReportMessage(
       campaign_type: "owner_digest",
       message_text: `[DRY RUN] ${messageText}`,
     });
-    return true;
+    return { success: true };
   }
 
   try {
@@ -27,8 +24,7 @@ export async function sendOwnerReportMessage(
     const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
 
     if (!phoneNumberId || !accessToken) {
-      console.error("Owner report: WhatsApp credentials missing");
-      return false;
+      return { success: false, error: "Missing WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_ACCESS_TOKEN env var" };
     }
 
     const response = await fetch(
@@ -50,8 +46,7 @@ export async function sendOwnerReportMessage(
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("Owner report send failed:", errorBody);
-      return false;
+      return { success: false, error: errorBody };
     }
 
     await supabase.from("whatsapp_messages").insert({
@@ -61,9 +56,8 @@ export async function sendOwnerReportMessage(
       message_text: messageText,
     });
 
-    return true;
+    return { success: true };
   } catch (err) {
-    console.error("sendOwnerReportMessage error:", err);
-    return false;
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
