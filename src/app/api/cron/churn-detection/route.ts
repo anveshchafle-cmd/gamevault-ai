@@ -2,18 +2,20 @@
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
 import { churnRecoveryMessage } from "@/lib/whatsapp/templates";
+import { generatePersonalizedChurnMessage } from "@/lib/ai/messageWriter";
 
 export async function GET() {
   const supabase = createServiceRoleClient();
-  const summary: { scanned: number; messagesSent: number; customers: string[] } = {
+  const summary: { scanned: number; messagesSent: number; aiPersonalized: number; customers: string[] } = {
     scanned: 0,
     messagesSent: 0,
+    aiPersonalized: 0,
     customers: [],
   };
 
   const { data: customers, error: customersError } = await supabase
     .from("customers")
-    .select("id, cafe_id, name, phone, favorite_game");
+    .select("id, cafe_id, name, phone, favorite_game, clv_tier");
 
   if (customersError || !customers) {
     return NextResponse.json(
@@ -28,20 +30,17 @@ export async function GET() {
   for (const customer of customers) {
     summary.scanned++;
 
-    // Pull this customer's full visit history to learn their normal rhythm
     const { data: allSessions } = await supabase
       .from("sessions")
       .select("started_at")
       .eq("customer_id", customer.id)
       .order("started_at", { ascending: false });
 
-    if (!allSessions || allSessions.length === 0) continue; // never visited, not a churn case
+    if (!allSessions || allSessions.length === 0) continue;
 
     const lastVisit = new Date(allSessions[0].started_at);
     const daysInactive = Math.floor((Date.now() - lastVisit.getTime()) / (1000 * 60 * 60 * 24));
 
-    // Personalized threshold: median gap between this customer's own visits.
-    // Falls back to a flat 7 days if there's not enough history to learn a pattern yet.
     let threshold = 7;
     if (allSessions.length >= 3) {
       const gaps: number[] = [];
@@ -52,12 +51,10 @@ export async function GET() {
       }
       gaps.sort((x, y) => x - y);
       const medianGap = gaps[Math.floor(gaps.length / 2)];
-      // Flag once they've gone noticeably past their own normal rhythm (1.5x),
-      // with sane floor/ceiling so it never fires too early or waits forever.
       threshold = Math.min(30, Math.max(3, Math.round(medianGap * 1.5)));
     }
 
-    if (daysInactive < threshold) continue; // still within their normal rhythm
+    if (daysInactive < threshold) continue;
 
     const { data: recentMessage } = await supabase
       .from("whatsapp_messages")
@@ -69,14 +66,39 @@ export async function GET() {
       .maybeSingle();
 
     if (recentMessage && new Date(recentMessage.sent_at) > threeDaysAgo) {
-      continue; // already messaged recently, don't spam
+      continue;
     }
 
-    const messageText = churnRecoveryMessage(
-      customer.name ?? "there",
-      customer.favorite_game,
-      daysInactive
-    );
+    // Try AI-personalized message first; fall back to the reliable template
+    // if the AI call fails for any reason (billing, API error, etc.) — the
+    // automation must never silently stop working.
+    let messageText: string | null = null;
+    try {
+      const { data: achievements } = await supabase
+        .from("customer_achievements")
+        .select("achievement_code")
+        .eq("customer_id", customer.id);
+
+      messageText = await generatePersonalizedChurnMessage({
+        customerName: customer.name ?? "there",
+        favoriteGame: customer.favorite_game,
+        daysInactive,
+        clvTier: customer.clv_tier,
+        achievements: (achievements ?? []).map((a) => a.achievement_code),
+      });
+
+      if (messageText) summary.aiPersonalized++;
+    } catch {
+      messageText = null;
+    }
+
+    if (!messageText) {
+      messageText = churnRecoveryMessage(
+        customer.name ?? "there",
+        customer.favorite_game,
+        daysInactive
+      );
+    }
 
     const result = await sendWhatsAppMessage({
       cafeId: customer.cafe_id,

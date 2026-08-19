@@ -3,6 +3,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { recomputeClvForCafe } from "@/lib/clv/engine";
 import { generateNextBestActions } from "@/lib/nba/engine";
 import { rolloverExpiredSquadCycles } from "@/lib/squads/rollover";
+import { generateExecutiveSummary } from "@/lib/ai/executiveSummary";
 
 export async function GET(request: Request) {
   const baseUrl = new URL(request.url).origin;
@@ -16,7 +17,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No cafes found" }, { status: 404 });
   }
 
-  // 1. Churn detection + WhatsApp
   try {
     const res = await fetch(`${baseUrl}/api/cron/churn-detection`);
     report.churnDetection = await res.json();
@@ -24,7 +24,6 @@ export async function GET(request: Request) {
     report.churnDetection = { error: String(e) };
   }
 
-  // 2. Birthday check
   try {
     const res = await fetch(`${baseUrl}/api/cron/birthday-check`);
     report.birthdayCheck = await res.json();
@@ -32,7 +31,6 @@ export async function GET(request: Request) {
     report.birthdayCheck = { error: String(e) };
   }
 
-  // 3. Leaderboard refresh
   try {
     const res = await fetch(`${baseUrl}/api/cron/refresh-leaderboard`);
     report.leaderboardRefresh = await res.json();
@@ -40,7 +38,6 @@ export async function GET(request: Request) {
     report.leaderboardRefresh = { error: String(e) };
   }
 
-  // 4. CLV recompute (per cafe, direct call — no extra HTTP hop)
   let totalScored = 0;
   let squadsRolledOver = 0;
   for (const cafe of cafes) {
@@ -53,7 +50,6 @@ export async function GET(request: Request) {
   report.clvRecompute = { totalScored };
   report.squadRollover = { squadsRolledOver };
 
-  // 5. Next-Best-Action generation (depends on fresh CLV, so runs after step 4)
   let totalActionsGenerated = 0;
   for (const cafe of cafes) {
     const result = await generateNextBestActions(cafe.id);
@@ -61,7 +57,6 @@ export async function GET(request: Request) {
   }
   report.nbaGeneration = { totalActionsGenerated };
 
-  // 6. NBA outcome measurement
   try {
     const res = await fetch(`${baseUrl}/api/cron/measure-nba-outcomes`);
     report.nbaOutcomeMeasurement = await res.json();
@@ -73,8 +68,11 @@ export async function GET(request: Request) {
   report.finishedAt = finishedAt.toISOString();
   report.durationSeconds = Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000);
 
-  // Log this run for the owner report history — once per cafe, so each
-  // tenant sees their own report, not just whichever cafe was first.
+  // AI executive summary — synthesizes the whole run into one strategic
+  // takeaway. Gracefully absent (report still fully works) if this fails.
+  const executiveSummary = await generateExecutiveSummary(report);
+  report.executiveSummary = executiveSummary;
+
   for (const cafe of cafes) {
     await supabase.from("customer_events").insert({
       cafe_id: cafe.id,

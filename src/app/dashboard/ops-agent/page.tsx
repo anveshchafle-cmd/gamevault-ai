@@ -20,11 +20,18 @@ export default async function OpsAgentPage() {
       <h1 className="text-3xl font-bold tracking-tight mb-10">Daily Ops Agent</h1>
 
       <p className="text-sm text-[var(--text-dim)] mb-8">
-        Runs churn detection, birthday messages, leaderboard refresh, CLV scoring, squad renewals,
-        and Next-Best-Action generation &mdash; one click, full report below.
+        Runs churn detection (with AI-personalized messages), birthday messages, leaderboard refresh,
+        CLV scoring, squad renewals, and Next-Best-Action generation &mdash; one click, full report below.
       </p>
 
       <RunAgentButton />
+
+      {payload?.executiveSummary && (
+        <div className="mt-10 surface rounded-lg p-6 border-[var(--accent)]">
+          <p className="label mb-2 text-[var(--accent)]">Executive Summary</p>
+          <p className="text-sm leading-relaxed">{payload.executiveSummary}</p>
+        </div>
+      )}
 
       {lastRun && payload && (
         <div className="mt-10">
@@ -36,32 +43,14 @@ export default async function OpsAgentPage() {
           <div className="space-y-0">
             <ReportRow
               label="Churn Recovery"
-              detail={`Scanned ${payload.churnDetection?.scanned ?? 0} customers, sent ${payload.churnDetection?.messagesSent ?? 0} messages`}
+              detail={`Scanned ${payload.churnDetection?.scanned ?? 0}, sent ${payload.churnDetection?.messagesSent ?? 0} (${payload.churnDetection?.aiPersonalized ?? 0} AI-personalized)`}
             />
-            <ReportRow
-              label="Birthday Messages"
-              detail={`${payload.birthdayCheck?.sent ?? 0} sent`}
-            />
-            <ReportRow
-              label="Leaderboard"
-              detail={payload.leaderboardRefresh?.success ? "Refreshed" : "Failed"}
-            />
-            <ReportRow
-              label="CLV Scoring"
-              detail={`${payload.clvRecompute?.totalScored ?? 0} customers scored`}
-            />
-            <ReportRow
-              label="Squad Renewals"
-              detail={`${payload.squadRollover?.squadsRolledOver ?? 0} cycles rolled over`}
-            />
-            <ReportRow
-              label="Next-Best-Actions"
-              detail={`${payload.nbaGeneration?.totalActionsGenerated ?? 0} generated`}
-            />
-            <ReportRow
-              label="Outcome Measurement"
-              detail={`${payload.nbaOutcomeMeasurement?.measured ?? 0} measured`}
-            />
+            <ReportRow label="Birthday Messages" detail={`${payload.birthdayCheck?.sent ?? 0} sent`} />
+            <ReportRow label="Leaderboard" detail={payload.leaderboardRefresh?.success ? "Refreshed" : "Failed"} />
+            <ReportRow label="CLV Scoring" detail={`${payload.clvRecompute?.totalScored ?? 0} customers scored`} />
+            <ReportRow label="Squad Renewals" detail={`${payload.squadRollover?.squadsRolledOver ?? 0} cycles rolled over`} />
+            <ReportRow label="Next-Best-Actions" detail={`${payload.nbaGeneration?.totalActionsGenerated ?? 0} generated`} />
+            <ReportRow label="Outcome Measurement" detail={`${payload.nbaOutcomeMeasurement?.measured ?? 0} measured`} />
           </div>
         </div>
       )}
