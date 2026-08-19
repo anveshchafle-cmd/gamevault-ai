@@ -6,6 +6,9 @@ import { rolloverExpiredSquadCycles } from "@/lib/squads/rollover";
 import { generateExecutiveSummary } from "@/lib/ai/executiveSummary";
 import { sendOwnerReportMessage } from "@/lib/whatsapp/ownerReport";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   const baseUrl = new URL(request.url).origin;
   const startedAt = new Date();
@@ -81,13 +84,23 @@ export async function GET(request: Request) {
       event_payload: report,
     });
 
-    // Send the summary straight to the owner's WhatsApp, if they've set a number
-    if (cafe.owner_phone && executiveSummary) {
-      const sent = await sendOwnerReportMessage(cafe.id, cafe.owner_phone, executiveSummary);
-      if (sent) ownerReportsSent++;
+    if (cafe.owner_phone) {
+      const messageText = executiveSummary ?? (
+        `GameVault daily report: ${report.churnDetection?.messagesSent ?? 0} churn messages sent, ` +
+        `${report.clvRecompute?.totalScored ?? 0} customers scored, ` +
+        `${report.nbaGeneration?.totalActionsGenerated ?? 0} actions generated. ` +
+        `Check the Ops Agent page for full details.`
+      );
+      const sendResult = await sendOwnerReportMessage(cafe.id, cafe.owner_phone, messageText);
+      if (sendResult.success) {
+        ownerReportsSent++;
+      } else {
+        report.ownerReportError = sendResult.error;
+      }
     }
   }
   report.ownerReportsSent = ownerReportsSent;
+  report.debugCafes = cafes;
 
   return NextResponse.json(report);
 }
