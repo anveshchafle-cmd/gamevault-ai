@@ -32,6 +32,21 @@ export default async function RetentionPage() {
   }
 
   const { data: cafe } = await supabase.from("cafes").select("id").limit(1).maybeSingle();
+
+  const { data: variantMessages } = await supabase
+    .from("whatsapp_messages")
+    .select("variant, led_to_visit")
+    .eq("campaign_type", "churn_recovery")
+    .not("led_to_visit", "is", null);
+
+  const variantStats: Record<string, { sent: number; converted: number }> = {};
+  (variantMessages ?? []).forEach((m) => {
+    const v = m.variant ?? "default";
+    if (!variantStats[v]) variantStats[v] = { sent: 0, converted: 0 };
+    variantStats[v].sent++;
+    if (m.led_to_visit) variantStats[v].converted++;
+  });
+
   const isDryRun = process.env.WHATSAPP_MODE !== "live";
 
   const campaignCounts: Record<string, number> = {};
@@ -62,6 +77,24 @@ export default async function RetentionPage() {
       <div className="flex items-center gap-3 mb-8">
         <RunChurnButton />
       </div>
+
+      {Object.keys(variantStats).length > 0 && (
+        <div className="mb-8">
+          <p className="label mb-3">Churn Message A/B Test Results</p>
+          <div className="grid grid-cols-2 gap-4 max-w-md">
+            {Object.entries(variantStats).map(([variant, stats]) => {
+              const rate = stats.sent > 0 ? ((stats.converted / stats.sent) * 100).toFixed(0) : "0";
+              return (
+                <div key={variant} className="surface rounded p-3">
+                  <p className="text-xs text-[var(--text-dim)] capitalize mb-1">{variant}</p>
+                  <p className="text-lg font-semibold">{rate}%</p>
+                  <p className="text-[10px] text-[var(--text-dim)]">{stats.converted}/{stats.sent} came back</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {cafe && <FomoCampaignForm cafeId={cafe.id} />}
 
