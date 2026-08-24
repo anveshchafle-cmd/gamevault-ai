@@ -1,4 +1,5 @@
 ﻿import { createClient } from "@/lib/supabase/server";
+import PrestigeButton from "./PrestigeButton";
 
 export default async function BattlePassPage() {
   const supabase = await createClient();
@@ -20,7 +21,7 @@ export default async function BattlePassPage() {
   const { data: progress } = season
     ? await supabase
         .from("customer_battle_pass_progress")
-        .select("*, customers(name, phone)")
+        .select("*, customers(id, name, phone, prestige_level)")
         .eq("season_id", season.id)
         .order("current_xp", { ascending: false })
         .limit(20)
@@ -52,7 +53,7 @@ export default async function BattlePassPage() {
             <div className="space-y-0">
               {progress && progress.length > 0 ? (
                 progress.map((p: any) => (
-                  <div key={p.id} className="grid grid-cols-4 gap-4 py-3 border-b border-[var(--border)] items-center text-sm">
+                  <div key={p.id} className="grid grid-cols-5 gap-4 py-3 border-b border-[var(--border)] items-center text-sm">
                     <span>{p.customers?.name ?? p.customers?.phone ?? "Unknown"}</span>
                     <span className="font-stat text-[var(--accent)]">{p.current_xp} XP</span>
                     <span className="text-[var(--text-dim)]">Tier {p.current_tier} / {maxTier}</span>
@@ -62,6 +63,15 @@ export default async function BattlePassPage() {
                         style={{ width: `${Math.min(100, (p.current_tier / maxTier) * 100)}%` }}
                       />
                     </div>
+                    {p.customers && (
+                      <PrestigeButton
+                        customerId={p.customers.id}
+                        progressId={p.id}
+                        currentTier={p.current_tier}
+                        maxTier={maxTier}
+                        prestigeLevel={p.customers.prestige_level ?? 0}
+                      />
+                    )}
                   </div>
                 ))
               ) : (

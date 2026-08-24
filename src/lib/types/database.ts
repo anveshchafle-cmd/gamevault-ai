@@ -68,6 +68,7 @@ export type Database = {
           churn_risk_score: number | null;
           cafe_coins: number;
           comp_tier: string;
+          prestige_level: number;
           referral_code: string | null;
           created_at: string;
         };
@@ -87,6 +88,7 @@ export type Database = {
           created_at?: string;
           comp_tier?: string;
           referral_code?: string | null;
+          prestige_level?: number;
         };
         Update: Partial<Database["public"]["Tables"]["customers"]["Insert"]>;
         Relationships: [];
