@@ -1,5 +1,6 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import CreatePricingRuleForm from "./CreatePricingRuleForm";
+import { analyzeRuleElasticity } from "@/lib/pricing/elasticity";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -12,6 +13,8 @@ export default async function PricingPage() {
     .order("created_at", { ascending: false });
 
   const { data: cafe } = await supabase.from("cafes").select("id").limit(1).maybeSingle();
+
+  const elasticityInsights = cafe ? await analyzeRuleElasticity(cafe.id) : [];
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] px-8 py-12 max-w-4xl mx-auto">
@@ -29,13 +32,29 @@ export default async function PricingPage() {
         </div>
       )}
 
+      {elasticityInsights.length > 0 && (
+        <div className="mb-10">
+          <p className="label mb-3">Revenue Insights (from real data)</p>
+          <div className="space-y-3">
+            {elasticityInsights.map((insight) => (
+              <div key={insight.ruleId} className="surface rounded p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium text-sm">{insight.ruleName}</span>
+                  <span className="text-xs text-[var(--text-dim)]">{insight.sampleSize} sessions analyzed</span>
+                </div>
+                <p className="text-xs text-[var(--text-dim)]">{insight.suggestion}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-0">
         {rules && rules.length > 0 ? (
           rules.map((r) => {
             const days = r.day_of_week && r.day_of_week.length > 0
               ? r.day_of_week.map((d) => DAYS[d]).join(" + ")
               : "Every day";
-            const time = r.start_time && r.end_time ? `${r.start_time} &rarr; ${r.end_time}` : "All day";
             const occupancy = r.min_occupancy_pct != null || r.max_occupancy_pct != null
               ? `Occupancy ${r.min_occupancy_pct ?? 0}&ndash;${r.max_occupancy_pct ?? 100}%`
               : null;
