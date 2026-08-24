@@ -68,6 +68,13 @@ export async function GET(request: Request) {
     report.nbaOutcomeMeasurement = { error: String(e) };
   }
 
+  try {
+    const res = await fetch(`${baseUrl}/api/cron/measure-variant-outcomes`);
+    report.variantOutcomeMeasurement = await res.json();
+  } catch (e) {
+    report.variantOutcomeMeasurement = { error: String(e) };
+  }
+
   const finishedAt = new Date();
   report.finishedAt = finishedAt.toISOString();
   report.durationSeconds = Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000);
