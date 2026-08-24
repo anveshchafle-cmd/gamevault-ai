@@ -3,6 +3,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/send";
 import { churnRecoveryMessage } from "@/lib/whatsapp/templates";
 import { generatePersonalizedChurnMessage } from "@/lib/ai/messageWriter";
+import { churnRecoveryMessageVariant, getVariantForCustomer } from "@/lib/whatsapp/churnVariants";
 
 export async function GET() {
   const supabase = createServiceRoleClient();
@@ -69,9 +70,6 @@ export async function GET() {
       continue;
     }
 
-    // Try AI-personalized message first; fall back to the reliable template
-    // if the AI call fails for any reason (billing, API error, etc.) — the
-    // automation must never silently stop working.
     let messageText: string | null = null;
     try {
       const { data: achievements } = await supabase
@@ -92,8 +90,11 @@ export async function GET() {
       messageText = null;
     }
 
+    const variant = getVariantForCustomer(customer.id);
+
     if (!messageText) {
-      messageText = churnRecoveryMessage(
+      messageText = churnRecoveryMessageVariant(
+        variant,
         customer.name ?? "there",
         customer.favorite_game,
         daysInactive
@@ -105,6 +106,7 @@ export async function GET() {
       customerId: customer.id,
       phone: customer.phone,
       campaignType: "churn_recovery",
+      variant,
       messageText,
     });
 
